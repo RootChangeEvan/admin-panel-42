@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STAR Dashboard — Admin Panel</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f8; color: #1F2937; min-height: 100vh; }
+
+/* Login */
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #22378C 0%, #1a2a6e 100%); }
+.login-card { background: #fff; border-radius: 12px; padding: 40px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.login-logo { text-align: center; margin-bottom: 28px; }
+.login-logo h1 { font-size: 20px; font-weight: 600; color: #22378C; margin-top: 8px; }
+.login-logo p { font-size: 13px; color: #9CA3AF; margin-top: 4px; }
+.login-card label { font-size: 13px; font-weight: 500; color: #374151; display: block; margin-bottom: 6px; }
+.login-card input { width: 100%; padding: 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 8px; font-size: 14px; outline: none; transition: border .15s; }
+.login-card input:focus { border-color: #22378C; }
+.login-btn { width: 100%; background: #22378C; color: #fff; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 20px; transition: background .15s; }
+.login-btn:hover { background: #1a2a6e; }
+.login-error { color: #DC2626; font-size: 13px; margin-top: 10px; text-align: center; display: none; }
+
+/* App */
+.app { display: none; }
+.top-bar { background: #22378C; color: #fff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
+.top-bar h1 { font-size: 17px; font-weight: 600; }
+.top-bar p { font-size: 12px; opacity: .7; margin-top: 2px; }
+.top-bar-right { display: flex; align-items: center; gap: 16px; }
+.logout-btn { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.logout-btn:hover { background: rgba(255,255,255,.25); }
+
+.content { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+/* Cards */
+.card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.card-title { font-size: 15px; font-weight: 600; color: #22378C; margin-bottom: 4px; }
+.card-sub { font-size: 13px; color: #6B7280; margin-bottom: 20px; }
+
+/* Grid */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+/* Status tiles */
+.status-tile { background: #f8f9ff; border: 1px solid #e5e7f0; border-radius: 10px; padding: 16px; }
+.status-tile .label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; color: #9CA3AF; margin-bottom: 6px; }
+.status-tile .value { font-size: 22px; font-weight: 600; color: #22378C; }
+.status-tile .sub { font-size: 11px; color: #9CA3AF; margin-top: 4px; }
+
+/* State grid */
+.state-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
+.state-card { background: #f8f9ff; border: 1px solid #e5e7f0; border-radius: 8px; padding: 14px; }
+.state-card .state-name { font-size: 13px; font-weight: 600; color: #1F2937; margin-bottom: 6px; }
+.state-card .state-meta { font-size: 12px; color: #6B7280; line-height: 1.6; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+.dot-green { background: #10B981; }
+.dot-amber { background: #F59E0B; }
+.dot-grey  { background: #D1D5DB; }
+
+/* Buttons */
+.btn { padding: 10px 20px; border-radius: 8px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 8px; }
+.btn-primary { background: #22378C; color: #fff; }
+.btn-primary:hover { background: #1a2a6e; }
+.btn-primary:disabled { background: #9CA3AF; cursor: not-allowed; }
+.btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #E5E7EB; }
+.btn-secondary:hover { background: #e5e7eb; }
+.btn-success { background: #059669; color: #fff; }
+.btn-success:hover { background: #047857; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Form elements */
+.form-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 12px; font-weight: 500; color: #374151; }
+.form-group select, .form-group input { padding: 8px 12px; border: 1.5px solid #E5E7EB; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
+.form-group select:focus, .form-group input:focus { border-color: #22378C; }
+
+/* Result boxes */
+.result-box { margin-top: 16px; padding: 14px 16px; border-radius: 8px; font-size: 13px; display: none; }
+.result-ok    { background: #ECFDF5; border: 1px solid #6EE7B7; color: #065F46; }
+.result-error { background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B; }
+.result-info  { background: #EFF6FF; border: 1px solid #93C5FD; color: #1E40AF; }
+.result-box a { color: inherit; font-weight: 600; }
+.result-box.visible { display: block; }
+
+/* State checkboxes */
+.state-checks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.state-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #374151; cursor: pointer; }
+.state-check input { accent-color: #22378C; }
+
+/* Log */
+.log-area { background: #1F2937; color: #D1FAE5; font-family: monospace; font-size: 12px; padding: 14px; border-radius: 8px; max-height: 180px; overflow-y: auto; margin-top: 14px; display: none; }
+.log-area.visible { display: block; }
+.recipient-tag { display: inline-flex; align-items: center; gap: 6px; background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; border-radius: 20px; padding: 4px 12px; font-size: 12px; }
+.recipient-tag button { background: none; border: none; color: #93C5FD; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; }
+.recipient-tag button:hover { color: #1E40AF; }
+.log-line { margin-bottom: 3px; }
+.log-ok    { color: #6EE7B7; }
+.log-error { color: #FCA5A5; }
+.log-info  { color: #93C5FD; }
+
+.divider { border: none; border-top: 1px solid #F3F4F6; margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <div style="font-size:36px">🛡️</div>
+      <h1>STAR Admin Panel</h1>
+      <p>Root Change · Internal access only</p>
+    </div>
+    <label for="admin-pw">Admin password</label>
+    <input type="password" id="admin-pw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">Sign in</button>
+    <div class="login-error" id="login-error">Incorrect password. Please try again.</div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app" id="app">
+  <div class="top-bar">
+    <div>
+      <h1>STAR Dashboard — Admin Panel</h1>
+      <p>Root Change internal tools · The Carter Center Conflict Resolution Program</p>
+    </div>
+    <div class="top-bar-right">
+      <span id="last-refresh" style="font-size:12px;opacity:.6"></span>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Report Drift Notifications -->
+    <div id="drift-banners"></div>
+
+    <!-- System Health -->
+    <div class="card">
+      <div class="card-title" onclick="toggleCard('health-body','health-toggle-icon')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <span>System Health</span>
+        <span id="health-toggle-icon" style="font-size:15px;font-weight:700;color:var(--blue,#1a2f75);">+</span>
+      </div>
+      <div class="card-sub">Live checks of the pipeline's actual dependencies — not just submission counts.</div>
+      <div id="health-body" style="display:none;">
+        <div id="health-checks" style="margin-top:12px;"></div>
+        <button class="btn btn-secondary" onclick="loadSystemHealth()" style="margin-top:12px;">↻ Refresh health checks</button>
+      </div>
+    </div>
+
+    <!-- Contract Delivery Status -->
+    <div class="card">
+      <div class="card-title" onclick="toggleCard('delivery-status-wrap','delivery-toggle-icon')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <span>Contract Delivery Status</span>
+        <span id="delivery-toggle-icon" style="font-size:15px;font-weight:700;color:var(--blue,#1a2f75);">+</span>
+      </div>
+      <div class="card-sub">Root Change's own contract deliverables for this engagement — separate from the DRN program data above. Full detail and editing lives in the Delivery Tracker tab on the public dashboard; this is a read-only summary.</div>
+      <div id="delivery-status-wrap" style="display:none;">
+        <div id="delivery-status-body" style="margin-top:12px;">Loading…</div>
+        <button class="btn btn-secondary" onclick="loadDeliveryStatus()" style="margin-top:12px;">↻ Refresh delivery status</button>
+      </div>
+    </div>
+
+    <!-- Pipeline Status -->
+    <div class="card">
+      <div class="card-title" onclick="toggleCard('pipeline-body','pipeline-toggle-icon')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <span>Pipeline Status</span>
+        <span id="pipeline-toggle-icon" style="font-size:15px;font-weight:700;color:var(--blue,#1a2f75);">−</span>
+      </div>
+      <div class="card-sub">Live data from the Google Sheet pipeline</div>
+
+      <div id="pipeline-body" style="display:block;">
+        <div class="grid-3" id="status-tiles">
+          <div class="status-tile"><div class="label">Form submissions</div><div class="value" id="s-total">—</div><div class="sub">from coordinators (all time)</div></div>
+          <div class="status-tile"><div class="label">Months of data</div><div class="value" id="s-processed">—</div><div class="sub">in Supabase (historical + new)</div></div>
+          <div class="status-tile"><div class="label">Last sync</div><div class="value" id="s-sync" style="font-size:13px;padding-top:4px">—</div><div class="sub">last data push to dashboard</div></div>
+        </div>
+
+        <div class="state-grid" id="state-grid"></div>
+
+        <div style="margin-top:16px">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#6B7280;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:500;color:#374151;">State health:</span>
+        <span><span class="dot dot-green" style="display:inline-block;vertical-align:middle"></span>&nbsp;On track</span>
+        <span><span class="dot dot-amber" style="display:inline-block;vertical-align:middle"></span>&nbsp;Overdue</span>
+        <span><span class="dot dot-grey"  style="display:inline-block;vertical-align:middle"></span>&nbsp;No recent submission</span>
+        <span style="color:#9CA3AF;font-size:11px;">(Weekly: &lt;10d / &lt;18d &nbsp;|&nbsp; Monthly: &lt;35d / &lt;50d)</span>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#6B7280;align-items:center;margin-bottom:12px;">
+        <span style="font-weight:500;color:#374151;">Individual leads:</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#059669;vertical-align:middle;"></span>&nbsp;Reported this period</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#DC2626;vertical-align:middle;"></span>&nbsp;Missing this period</span>
+      </div>
+      <button class="btn btn-secondary" id="refresh-status-btn" onclick="loadStatus()">↻ Refresh status</button>
+      </div>
+      </div>
+    </div>
+
+    <!-- CRT Reporting Status -->
+    <div class="card">
+      <div class="card-title" onclick="toggleCard('crt-status-wrap','crt-toggle-icon')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <span>CRT Reporting Status</span>
+        <span id="crt-toggle-icon" style="font-size:15px;font-weight:700;color:var(--blue,#1a2f75);">+</span>
+      </div>
+      <div class="card-sub">Community Resilience Team monthly reports — five active teams. A team isn't shown as missing until its reporting month has actually ended.</div>
+      <div id="crt-status-wrap" style="display:none;">
+        <div id="crt-status-body" style="margin-top:12px;">Loading…</div>
+        <button class="btn btn-secondary" onclick="loadCRTStatus()" style="margin-top:12px;">↻ Refresh CRT status</button>
+      </div>
+    </div>
+
+    <!-- Reporting Contacts & Reminders (consolidated) -->
+    <div class="card">
+      <div class="card-title" onclick="toggleCard('leads-body','leads-toggle-icon')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <span>Reporting Contacts</span>
+        <span id="leads-toggle-icon" style="font-size:15px;font-weight:700;color:var(--blue,#1a2f75);">+</span>
+      </div>
+      <div class="card-sub">Who's reported this period, their email, and their state's TCC Manager. Edit inline; save takes effect immediately.</div>
+      <div id="leads-body" style="display:none;">
+        <div id="contacts-table-wrap" style="margin-top:12px;"></div>
+        <div style="margin-top:14px;">
+          <button class="btn btn-primary" onclick="sendReminders()" id="remind-btn">Send reminders to missing leads</button>
+          <div style="font-size:11.5px;color:#6B7280;margin-top:6px;">You'll be asked to confirm exactly who receives an email before anything actually sends.</div>
+          <div id="remind-result" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+
+      <!-- Force Sync -->
+      <div class="card">
+        <div class="card-title">Refresh Dashboard Data</div>
+        <div class="card-sub">Dashboard data normally updates in real time the moment a weekly report is submitted — there's no scheduled sync waiting to run. Use this to manually re-push a month's data on demand, e.g. to recover from a failed push or backfill after a data correction.</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Month</label>
+            <select id="sync-month">
+              <option value="">Most recent completed month</option>
+              <option>January</option><option>February</option><option>March</option>
+              <option>April</option><option>May</option><option>June</option>
+              <option>July</option><option>August</option><option>September</option>
+              <option>October</option><option>November</option><option>December</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <select id="sync-year">
+              <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="sync-btn" onclick="forceSync()">
+            <span id="sync-spinner" class="spinner" style="display:none"></span>
+            Sync now
+          </button>
+        </div>
+
+        <div class="result-box" id="sync-result"></div>
+        <div class="log-area" id="sync-log"></div>
+      </div>
+
+      <!-- Generate Report (consolidated: Monthly, Quarterly, 6-Month, Annual, Custom, Newsletter) -->
+      <div class="card">
+        <div class="card-title">Generate Report</div>
+        <div class="card-sub">One report generator for every timeframe. Narrative reports (Monthly, Quarterly, 6-Month, Annual, Custom) read coordinator submissions for the period and save a Google Doc to the <a href="https://drive.google.com/drive/folders/1N4p1RtbbHur0ynFNX51hZdRfJVu7-_Ig" target="_blank">Root Change Google Drive</a>. The DRN Newsletter uses the same data with a different voice and previews below to copy into your email tool.</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Report type</label>
+            <select id="gen-type" onchange="onGenTypeChange()">
+              <option value="monthly">Monthly Narrative (State-by-State)</option>
+              <option value="crplevel">Monthly Narrative (CRP-Level, all states)</option>
+              <option value="crtreport">CRT Report (conflict-mitigation, all teams)</option>
+              <option value="qaworkbook">QA Workbook (spreadsheet for checking the data)</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="sixmonth">6-Month</option>
+              <option value="annual">Annual</option>
+              <option value="custom">Custom Timeframe</option>
+              <option value="newsletter">DRN Member Newsletter</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" id="gen-tf-monthly">
+          <div class="form-group">
+            <label>Month</label>
+            <select id="gen-month" onchange="updateGenPreview()">
+              <option value="">Most recent completed month</option>
+              <option>January</option><option>February</option><option>March</option>
+              <option>April</option><option>May</option><option>June</option>
+              <option>July</option><option>August</option><option>September</option>
+              <option>October</option><option>November</option><option>December</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <select id="gen-year" onchange="updateGenPreview()">
+              <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" id="gen-tf-quarterly" style="display:none">
+          <div class="form-group">
+            <label>Quarter</label>
+            <select id="gen-quarter" onchange="updateGenPreview()">
+              <option value="1">Q1 (Jan – Mar)</option>
+              <option value="2">Q2 (Apr – Jun)</option>
+              <option value="3" selected>Q3 (Jul – Sep)</option>
+              <option value="4">Q4 (Oct – Dec)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <select id="gen-quarter-year" onchange="updateGenPreview()">
+              <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" id="gen-tf-sixmonth" style="display:none">
+          <div class="form-group">
+            <label>Half</label>
+            <select id="gen-half" onchange="updateGenPreview()">
+              <option value="1">H1 (Jan – Jun)</option>
+              <option value="2" selected>H2 (Jul – Dec)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <select id="gen-half-year" onchange="updateGenPreview()">
+              <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" id="gen-tf-annual" style="display:none">
+          <div class="form-group">
+            <label>Year</label>
+            <select id="gen-annual-year" onchange="updateGenPreview()">
+              <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" id="gen-tf-custom" style="display:none">
+          <div class="form-group">
+            <label>From month</label>
+            <select id="gen-from-month" onchange="updateGenPreview()">
+              <option>January</option><option>February</option><option>March</option>
+              <option>April</option><option>May</option><option>June</option>
+              <option>July</option><option>August</option><option>September</option>
+              <option>October</option><option>November</option><option>December</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <select id="gen-from-year" onchange="updateGenPreview()">
+              <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option><option>2023</option>
+            </select>
+          </div>
+          <div style="padding-bottom:8px;color:#9CA3AF;font-size:14px">to</div>
+          <div class="form-group">
+            <label>To month</label>
+            <select id="gen-to-month" onchange="updateGenPreview()">
+              <option>January</option><option>February</option><option>March</option>
+              <option>April</option><option>May</option><option selected>June</option>
+              <option>July</option><option>August</option><option>September</option>
+              <option>October</option><option>November</option><option>December</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <select id="gen-to-year" onchange="updateGenPreview()">
+              <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option><option>2023</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="gen-range-preview" style="font-size:12px;color:#6B7280;margin:-6px 0 14px;"></div>
+
+        <div id="gen-states-block">
+          <div class="card-sub" style="margin-bottom:8px;margin-top:0">Include states:</div>
+          <div class="state-checks" id="gen-state-checks"></div>
+        </div>
+
+        <div id="gen-qa-block" style="display:none;margin-top:14px;">
+          <div class="card-sub" style="margin-bottom:6px;margin-top:0">Builds a Google Sheet laid out like the Data Dashboard spreadsheet, straight from Supabase. Hover any number in it to see which weekly reports it came from.</div>
+          <div class="card-sub" style="margin-bottom:6px;margin-top:8px;font-weight:500;color:#374151">Optional: compare against the analyst's own spreadsheet</div>
+          <input type="text" id="gen-qa-compare-url" placeholder="Paste a Google Sheets link (must have a &quot;Data Dashboard&quot; tab)" style="padding:8px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:13px;width:100%;box-sizing:border-box;">
+          <div style="font-size:11.5px;color:#9CA3AF;margin-top:4px;">Leave blank to skip the comparison. Differences are highlighted in orange and listed on a Flags to Review tab.</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="card-sub" style="margin-bottom:10px;margin-top:0;font-weight:500;color:#374151">Notify when ready:</div>
+
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;margin-bottom:12px;cursor:pointer;">
+          <input type="checkbox" id="gen-oneoff-toggle" onchange="toggleGenRecipientMode()" style="width:15px;height:15px;cursor:pointer;">
+          Send to one specific person instead of the standing list
+        </label>
+
+        <div id="gen-standing-block">
+          <div id="report-recipients" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px"></div>
+          <div id="news-recipients" style="display:none;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="gen-report-new-email" placeholder="Add email address…" style="padding:7px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:13px;outline:none;width:220px;" onkeydown="if(event.key==='Enter')addRecipient('report')">
+            <button class="btn btn-secondary" id="gen-report-add-btn" style="padding:7px 14px;font-size:13px" onclick="addRecipient('report')">+ Add</button>
+            <input type="text" id="news-new-email" placeholder="Add email address…" style="display:none;padding:7px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:13px;outline:none;width:220px;" onkeydown="if(event.key==='Enter')addRecipient('news')">
+            <button class="btn btn-secondary" id="gen-news-add-btn" style="display:none;padding:7px 14px;font-size:13px" onclick="addRecipient('news')">+ Add</button>
+          </div>
+        </div>
+
+        <div id="gen-oneoff-block" style="display:none;">
+          <input type="text" id="gen-oneoff-email" placeholder="name@example.org" style="padding:8px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;width:240px;">
+        </div>
+
+        <button class="btn btn-success" id="gen-btn" onclick="generateUnifiedReport()" style="margin-top:16px;">
+          <span id="gen-spinner" class="spinner" style="display:none"></span>
+          Generate
+        </button>
+
+        <div class="result-box" id="gen-result"></div>
+
+        <div id="gen-news-preview-wrap" style="display:none;margin-top:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:600;color:#374151">Newsletter Preview</div>
+            <button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="copyNewsletter()">Copy to clipboard</button>
+          </div>
+          <div style="font-size:12px;color:#6B7280;margin-bottom:6px;">Subject: <strong id="news-subject"></strong></div>
+          <div id="news-preview" style="background:#f8f9ff;border:1px solid #e5e7f0;border-radius:8px;padding:20px 24px;font-size:13.5px;line-height:1.8;color:#1F2937;white-space:pre-wrap;max-height:500px;overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"></div>
+          <div id="copy-confirm" style="font-size:12px;color:#059669;margin-top:6px;display:none;">Copied to clipboard!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Following / Media Reach (manual entry) -->
+    <div class="card">
+      <div class="card-title">Update Social Following / Media Reach</div>
+      <div class="card-sub">Neither Social Following nor Media Reach is collected anywhere in the weekly form, so neither can be calculated automatically like Total Members. Pick which one, enter the current value for a state and month here — this writes directly to Supabase and only touches that one field, nothing else on that row.</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Metric</label>
+          <select id="social-metric" onchange="document.getElementById('social-value-label').textContent = this.value === 'media_reach' ? 'Media reach (unique visitors)' : 'Social following count';">
+            <option value="social_following">Social Following</option>
+            <option value="media_reach">Media Reach</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <select id="social-state">
+            <option value="Arizona">Arizona</option>
+            <option value="Florida">Florida</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Michigan">Michigan</option>
+            <option value="Nevada">Nevada</option>
+            <option value="North Carolina">North Carolina</option>
+            <option value="Pennsylvania">Pennsylvania</option>
+            <option value="Wisconsin">Wisconsin</option>
+            <option value="Faith Forward Democracy (FFD)">Faith Forward Democracy (FFD)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Month</label>
+          <select id="social-month">
+            <option>January</option><option>February</option><option>March</option>
+            <option>April</option><option>May</option><option>June</option>
+            <option>July</option><option>August</option><option>September</option>
+            <option>October</option><option>November</option><option>December</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Year</label>
+          <select id="social-year">
+            <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label id="social-value-label">Social following count</label>
+          <input type="number" id="social-value" min="0" placeholder="e.g. 4200" style="padding:8px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;width:140px;">
+        </div>
+        <button class="btn btn-primary" id="social-btn" onclick="updateSocialFollowing()">
+          <span id="social-spinner" class="spinner" style="display:none"></span>
+          Update
+        </button>
+      </div>
+
+      <div class="result-box" id="social-result"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// CONFIG                                                     
+const ADMIN_PASSWORD    = 'RC~Admin_2026!!';
+const APPS_SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbx-9DRZ2MVqCe7DZZqDCNGII_3aGZKgE5WsIJ3lsOVF4ikxtH4jcwUti-XUNySOgZ4I/exec';
+const SUPABASE_URL      = 'https://xsizfuguetpjesurrudl.supabase.co';
+const SUPABASE_KEY      = 'sb_publishable_6OwyvSfgciqTSoFc1wFV8Q_ND-lpRAl';
+const STATES = ['Arizona','Florida','Georgia','Michigan','Nevada','North Carolina','Pennsylvania','Wisconsin','Faith Forward Democracy (FFD)'];
+
+// Lead roster — read live from Supabase's lead_roster table, the same
+// source Code.gs's computeLeadRosterStatus() now reads. This used to be
+// a hardcoded object here that had to be kept in sync with a matching
+// one in Code.gs by hand; the two drifted out of sync at least once.
+// Add, remove, or reorder a lead by editing that table directly — no
+// redeploy needed on either side.
+let leadRoster = {}; // state -> [lead names], populated by loadLeadRoster()
+
+async function loadLeadRoster() {
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/lead_roster?select=state,lead_name&order=state.asc,display_order.asc', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    });
+    if (!res.ok) throw new Error('DB ' + res.status + ': ' + await res.text());
+    const rows = await res.json();
+    const roster = {};
+    rows.forEach(function(r) { (roster[r.state] = roster[r.state] || []).push(r.lead_name); });
+    leadRoster = roster;
+  } catch(err) {
+    console.error('loadLeadRoster error:', err.message);
+    leadRoster = {};
+  }
+  renderContactsTable();
+}
+
+// Cadence (weekly vs. monthly) per state — read live from Supabase's
+// state_cadence table, the same source Code.gs's fetchMonthlyStates() now
+// reads. This used to be a fourth hardcoded copy of the same list (Code.gs
+// alone had three, independently), the exact drift risk the lead roster
+// had. loadStatus() awaits this (via stateCadenceLoaded, cached so a
+// manual refresh doesn't re-fetch it every time) before using it.
+let stateCadence = {}; // state -> 'weekly'|'monthly', populated by loadStateCadence()
+let stateCadenceLoaded = null; // the in-flight/completed promise, so loadStatus() awaits it exactly once
+
+async function loadStateCadence() {
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/state_cadence?select=state,cadence', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    });
+    if (!res.ok) throw new Error('DB ' + res.status + ': ' + await res.text());
+    const rows = await res.json();
+    const map = {};
+    rows.forEach(function(r) { map[r.state] = r.cadence; });
+    stateCadence = map;
+  } catch(err) {
+    console.error('loadStateCadence error:', err.message);
+    stateCadence = {}; // falls back to "weekly" for every state via the === check below — matches this system's overall default
+  }
+}
+
+// Mirrors TCC_MANAGERS in Code.gs
+const TCC_MANAGERS_ADMIN = {
+  'Arizona':        { name: 'Dan Grant',    email: 'daniel.grant@cartercenter.org' },
+  'Florida':        { name: 'Lauren Kirby', email: 'Lauren.Kirby@cartercenter.org' },
+  'Georgia':        { name: 'Tom Crick',    email: 'tom.crick@cartercenter.org' },
+  'Michigan':       { name: 'Dan Grant',    email: 'daniel.grant@cartercenter.org' },
+  'North Carolina': { name: 'Dana Smiley',  email: 'Dana.Smiley@cartercenter.org' },
+  'Wisconsin':      { name: 'Dana Smiley',  email: 'Dana.Smiley@cartercenter.org' },
+};
+
+// AUTH                                                       
+function login() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw === ADMIN_PASSWORD) {
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    buildStateChecks();
+    loadRecipients();
+    loadStatus();
+    loadReportDrift();
+    loadSystemHealth();
+    loadLeadRoster();
+    loadLeadContacts();
+    loadManagerContacts();
+    loadDeliveryStatus();
+    loadCRTStatus();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('admin-pw').value = '';
+  }
+}
+
+function logout() {
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('admin-pw').value = '';
+}
+
+// BUILD STATE CHECKBOXES                                     
+// Recipients stored per report type — loaded from Supabase on login
+const recipients = {
+  report: ['ngillette@rootchange.org'],
+  news:   ['ebloom@rootchange.org'],
+};
+
+// Load recipients from Supabase
+async function loadRecipients() {
+  try {
+    const res  = await fetch(SUPABASE_URL + '/rest/v1/admin_settings?select=key,value', {
+      headers: {
+        'apikey':        SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+      }
+    });
+    const rows = await res.json();
+    rows.forEach(function(row) {
+      const type = row.key.replace('recipients_', '');
+      if (recipients[type] !== undefined && row.value) {
+        recipients[type] = row.value.split(',').map(function(e) { return e.trim(); }).filter(Boolean);
+      }
+    });
+  } catch(err) {
+    console.warn('Could not load recipients from Supabase:', err.message);
+  }
+  // Re-render after loading
+  ['report','news'].forEach(function(t) { renderRecipients(t); });
+}
+
+// Save recipients to Supabase
+async function saveRecipients(type) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/admin_settings', {
+      method: 'POST',
+      headers: {
+        'apikey':        SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({ key: 'recipients_' + type, value: recipients[type].join(',') }),
+    });
+  } catch(err) {
+    console.warn('Could not save recipients to Supabase:', err.message);
+  }
+}
+
+function buildStateChecks() {
+  const wrap = document.getElementById('gen-state-checks');
+  STATES.forEach(function(s) {
+    const label = document.createElement('label');
+    label.className = 'state-check';
+    label.innerHTML = '<input type="checkbox" value="' + s + '" checked> ' + s;
+    wrap.appendChild(label);
+  });
+  renderRecipients('report');
+  renderRecipients('news');
+  onGenTypeChange(); // sets initial timeframe visibility + recipient block visibility + preview text
+}
+
+function renderRecipients(type) {
+  const wrap = document.getElementById(type + '-recipients');
+  wrap.innerHTML = '';
+  recipients[type].forEach(function(email, i) {
+    const tag = document.createElement('div');
+    tag.className = 'recipient-tag';
+    tag.innerHTML = email + '<button onclick="removeRecipient(\'' + type + '\',' + i + ')" title="Remove">&#215;</button>';
+    wrap.appendChild(tag);
+  });
+}
+
+function addRecipient(type) {
+  const input = document.getElementById(type + '-new-email');
+  const email = input.value.trim().toLowerCase();
+  if (!email || !email.includes('@')) return;
+  if (!recipients[type].includes(email)) {
+    recipients[type].push(email);
+    renderRecipients(type);
+    saveRecipients(type);
+  }
+  input.value = '';
+}
+
+function removeRecipient(type, index) {
+  recipients[type].splice(index, 1);
+  renderRecipients(type);
+  saveRecipients(type);
+}
+
+function getRecipients(type) {
+  return recipients[type];
+}
+
+function getCheckedStates(id) {
+  return Array.from(document.querySelectorAll('#' + id + ' input:checked')).map(function(i) { return i.value; });
+}
+
+// PIPELINE STATUS                                            
+let lastStatusData = null;
+async function loadStatus() {
+  document.getElementById('last-refresh').textContent = 'Loading...';
+  const refreshBtn = document.getElementById('refresh-status-btn');
+  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = 'Refreshing…'; }
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + '?action=status');
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch(e) { throw new Error('Bad response'); }
+    lastStatusData = data;
+
+    document.getElementById('s-total').textContent     = (data.totalWeekly >= 0) ? data.totalWeekly : '0';
+    document.getElementById('s-processed').textContent = (data.totalProcessed >= 0) ? data.totalProcessed : '0';
+
+    // Read last sync directly from Supabase for accuracy
+    try {
+      const sbRes  = await fetch(SUPABASE_URL + '/rest/v1/admin_settings?key=eq.last_sync_time&select=value', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const sbData = await sbRes.json();
+      if (sbData && sbData.length > 0 && sbData[0].value) {
+        const d = new Date(sbData[0].value);
+        document.getElementById('s-sync').textContent =
+          d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) +
+          ' at ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      } else {
+        document.getElementById('s-sync').textContent = 'Never';
+      }
+    } catch(e) {
+      // Fall back to Apps Script response
+      if (data.lastSync && data.lastSync !== 'Never') {
+        try {
+          const d = new Date(data.lastSync);
+          document.getElementById('s-sync').textContent =
+            d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) +
+            ' at ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+        } catch(e2) { document.getElementById('s-sync').textContent = data.lastSync; }
+      } else {
+        document.getElementById('s-sync').textContent = 'Never';
+      }
+    }
+
+    const grid = document.getElementById('state-grid');
+    if (!stateCadenceLoaded) stateCadenceLoaded = loadStateCadence();
+    await stateCadenceLoaded;
+    grid.innerHTML = '';
+    STATES.forEach(function(state) {
+      const info      = (data.states && data.states[state]) || {};
+      const lastSub   = info.lastSubmission ? new Date(info.lastSubmission) : null;
+      const thisMonth = info.submissionsThisMonth || 0;
+      const monthsRec = info.monthsOnRecord || 0;
+      const cadence   = stateCadence[state] === 'monthly' ? 'monthly' : 'weekly';
+      const greenDays = cadence === 'monthly' ? 35 : 10;
+      const amberDays = cadence === 'monthly' ? 50 : 18;
+      const daysSince = lastSub ? Math.round((new Date() - lastSub) / 86400000) : null;
+      const dotClass  = !lastSub ? 'dot-grey' : daysSince <= greenDays ? 'dot-green' : daysSince <= amberDays ? 'dot-amber' : 'dot-grey';
+
+      // Per-lead breakdown — only present for states with more than
+      // one lead reporting separately (see LEAD_ROSTER in Code.gs).
+      let leadsHtml = '';
+      if (info.leads && info.leads.length) {
+        const periodLabel = cadence === 'monthly' ? 'this month' : 'this week';
+        leadsHtml = '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid #E5E7EB;">' +
+          info.leads.map(function(lead) {
+            const leadDot = lead.reportedThisPeriod ? '#059669' : '#DC2626';
+            const leadLast = lead.lastSubmission
+              ? new Date(lead.lastSubmission).toLocaleDateString('en-US',{month:'short',day:'numeric'})
+              : 'never';
+            return '<div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#374151;margin-bottom:3px;">' +
+              '<span style="width:7px;height:7px;border-radius:50%;background:' + leadDot + ';flex-shrink:0;"></span>' +
+              '<span>' + lead.name + (lead.reportedThisPeriod ? ' — reported ' + periodLabel : ' — missing ' + periodLabel + ' (last: ' + leadLast + ')') + '</span>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+      }
+
+      const card      = document.createElement('div');
+      card.className  = 'state-card';
+      card.innerHTML  =
+        '<div class="state-name"><span class="dot ' + dotClass + '"></span>' + state +
+        ' <span style="font-size:10px;color:#9CA3AF;font-weight:400;">(' + cadence + ')</span></div>' +
+        '<div class="state-meta">' +
+        (monthsRec > 0 ? 'On record: <strong>' + monthsRec + ' months</strong><br>' : '') +
+        'Last submission: ' + (lastSub ? lastSub.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'None') + '<br>' +
+        'This month: ' + thisMonth + ' submission' + (thisMonth !== 1 ? 's' : '') +
+        '</div>' + leadsHtml;
+      grid.appendChild(card);
+    });
+
+    document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    renderContactsTable();
+    if (refreshBtn) {
+      refreshBtn.textContent = '✓ Refreshed';
+      setTimeout(function(){ refreshBtn.disabled = false; refreshBtn.textContent = '↻ Refresh status'; }, 1500);
+    }
+  } catch(err) {
+    document.getElementById('last-refresh').textContent = 'Status unavailable';
+    console.error('loadStatus error:', err.message);
+    if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ Refresh status'; }
+  }
+}
+
+// REPORT DRIFT NOTIFICATIONS ----------------------------------
+// Late weekly submissions auto-correct the dashboard numbers in real
+// time (see pushToSupabase) — but an already-generated narrative
+// report Doc doesn't update itself. This checks whether any state's
+// numbers have changed since its report was last generated, and if
+// so, shows the before/after diff with a one-click regenerate option.
+const MONTH_NAMES_ADMIN = ['January','February','March','April','May','June',
+  'July','August','September','October','November','December'];
+
+function monthStrToNameYear(monthStr) {
+  const parts = monthStr.split('-');
+  return { name: MONTH_NAMES_ADMIN[parseInt(parts[1]) - 1], year: parseInt(parts[0]) };
+}
+
+function fmtDriftValue(field, value) {
+  if (value === null || value === undefined) return '—';
+  return Number(value).toLocaleString();
+}
+
+async function loadReportDrift() {
+  const wrap = document.getElementById('drift-banners');
+  try {
+    const res  = await fetch(APPS_SCRIPT_URL + '?action=reportDrift');
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.drift || !data.drift.length) {
+      wrap.innerHTML = '';
+      return;
+    }
+
+    wrap.innerHTML = data.drift.map(function(d, i) {
+      const my = monthStrToNameYear(d.month);
+      const changesHtml = d.changes.map(function(c) {
+        return '<span style="display:inline-block;margin:2px 10px 2px 0;">' +
+          '<strong>' + c.label + '</strong>: ' + fmtDriftValue(c.field, c.oldValue) +
+          ' → <strong style="color:#059669;">' + fmtDriftValue(c.field, c.newValue) + '</strong></span>';
+      }).join('');
+
+      const generatedDate = new Date(d.generatedAt).toLocaleDateString();
+      const reportLink = d.docUrl
+        ? '<a href="' + d.docUrl + '" target="_blank" style="color:#92400E;text-decoration:underline;">' + (d.docTitle || 'the report') + '</a>'
+        : (d.docTitle || 'the report');
+
+      return '<div class="card" style="border:1.5px solid #FDE68A;background:#FFFBEB;margin-bottom:16px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">' +
+          '<div>' +
+            '<div style="font-weight:700;color:#92400E;font-size:14px;margin-bottom:4px;">' +
+              d.state + '\'s ' + my.name + ' ' + my.year + ' numbers have changed since ' + reportLink + ' went out on ' + generatedDate +
+            '</div>' +
+            '<div style="font-size:12px;color:#6B7280;margin-bottom:8px;">' +
+              'Likely cause: a late weekly submission auto-corrected the dashboard.' +
+            '</div>' +
+            '<div style="font-size:13px;color:#374151;">' + changesHtml + '</div>' +
+          '</div>' +
+          '<button class="btn btn-primary" id="drift-btn-' + i + '" onclick="regenerateFromDrift(\'' + d.state.replace(/'/g,"\\'") + '\', \'' + d.month + '\', ' + i + ')" style="flex-shrink:0;">Regenerate report</button>' +
+        '</div>' +
+        '<div id="drift-result-' + i + '" style="margin-top:10px;"></div>' +
+      '</div>';
+    }).join('');
+  } catch(err) {
+    console.error('loadReportDrift error:', err.message);
+    wrap.innerHTML = '';
+  }
+}
+
+async function regenerateFromDrift(state, monthStr, i) {
+  const btn    = document.getElementById('drift-btn-' + i);
+  const result = document.getElementById('drift-result-' + i);
+  const my     = monthStrToNameYear(monthStr);
+  const rcpts  = getRecipients('report'); // same shared list as the main report card
+
+  btn.disabled = true;
+  btn.textContent = 'Regenerating…';
+  result.innerHTML = '<span style="font-size:12px;color:#6B7280;">This takes about 60 seconds…</span>';
+
+  const url = APPS_SCRIPT_URL + '?action=generateReport' +
+    '&month=' + encodeURIComponent(my.name) +
+    '&year=' + my.year +
+    '&states=' + encodeURIComponent(state) +
+    '&recipients=' + encodeURIComponent(rcpts.join(','));
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data.status === 'ok') {
+      result.innerHTML = '<span style="font-size:12px;color:#059669;">Regenerated — new file is named to distinguish it from the original.</span> ' +
+        '<a href="' + data.docUrl + '" target="_blank" style="font-size:12px;">Open Google Doc</a>';
+      // Refresh the whole banner list — this one should now clear since
+      // the snapshot has been updated to match current numbers.
+      setTimeout(loadReportDrift, 1500);
+    } else {
+      result.innerHTML = '<span style="font-size:12px;color:#DC2626;">Failed: ' + (data.message || 'Unknown error') + '</span>';
+      btn.disabled = false;
+      btn.textContent = 'Regenerate report';
+    }
+  } catch(err) {
+    result.innerHTML = '<span style="font-size:12px;color:#DC2626;">Request failed: ' + err.message + '</span>';
+    btn.disabled = false;
+    btn.textContent = 'Regenerate report';
+  }
+}
+
+// SYSTEM HEALTH -------------------------------------------------
+const HEALTH_COLORS = {
+  ok:      { dot: '#059669', text: '#065F46', bg: '#ECFDF5' },
+  warning: { dot: '#D97706', text: '#92400E', bg: '#FFFBEB' },
+  error:   { dot: '#DC2626', text: '#991B1B', bg: '#FEF2F2' },
+};
+
+async function loadSystemHealth() {
+  const wrap = document.getElementById('health-checks');
+  wrap.innerHTML = '<span style="font-size:13px;color:#6B7280;">Checking…</span>';
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + '?action=systemHealth');
+    const raw = await res.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch(parseErr) {
+      wrap.innerHTML = '<span style="font-size:13px;color:#DC2626;">Got an unexpected response from Apps Script (not JSON) — the deployment may need updating, or something crashed server-side. Check the Executions log.</span>';
+      return;
+    }
+    if (data.status !== 'ok' || !data.checks) {
+      wrap.innerHTML = '<span style="font-size:13px;color:#DC2626;">Health check failed to run' + (data.message ? ': ' + data.message : '.') + '</span>';
+      return;
+    }
+
+    wrap.innerHTML = data.checks.map(function(c) {
+      const colors = HEALTH_COLORS[c.status] || HEALTH_COLORS.warning;
+      let extra = '';
+      if (c.recentErrors && c.recentErrors.length) {
+        extra = '<div style="margin-top:6px;font-size:12px;color:' + colors.text + ';">' +
+          c.recentErrors.map(function(e) {
+            return '<div style="margin-bottom:2px;">' + new Date(e.occurred_at).toLocaleString() +
+              ' — [' + e.source + '] ' + (e.state || 'no state') + ': ' + e.message + '</div>';
+          }).join('') + '</div>';
+      }
+      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:0.5px solid #E5E7EB;">' +
+        '<div style="width:9px;height:9px;border-radius:50%;background:' + colors.dot + ';flex-shrink:0;margin-top:5px;"></div>' +
+        '<div>' +
+          '<div style="font-size:13.5px;font-weight:500;color:#374151;">' + c.name + '</div>' +
+          '<div style="font-size:12.5px;color:' + colors.text + ';">' + c.detail + '</div>' +
+          extra +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(err) {
+    wrap.innerHTML = '<span style="font-size:13px;color:#DC2626;">Health check request failed: ' + err.message + '</span>';
+  }
+}
+
+// COLLAPSIBLE CARDS -----------------------------------------------
+function toggleCard(bodyId, iconId) {
+  const body = document.getElementById(bodyId);
+  const icon = document.getElementById(iconId);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (icon) icon.textContent = isOpen ? '+' : '\u2212';
+}
+
+// LEAD CONTACTS -------------------------------------------------
+let lastLeadContacts = {};
+async function loadLeadContacts() {
+  try {
+    const res  = await fetch(APPS_SCRIPT_URL + '?action=getLeadContacts');
+    const data = await res.json();
+    const existing = {};
+    (data.contacts || []).forEach(function(c) { existing[c.state + '||' + c.lead_name] = c.email; });
+    lastLeadContacts = existing;
+  } catch(err) {
+    console.error('loadLeadContacts error:', err.message);
+  }
+  renderContactsTable();
+}
+
+// Effective TCC Manager per state — an override if one's been saved,
+// otherwise the hardcoded default from TCC_MANAGERS_ADMIN. The backend
+// already does this merge (see getManagerContacts()), so this is
+// always ready to render directly, never blank.
+let lastManagerContacts = {};
+async function loadManagerContacts() {
+  try {
+    const res  = await fetch(APPS_SCRIPT_URL + '?action=getManagerContacts');
+    const data = await res.json();
+    lastManagerContacts = data.managers || {};
+  } catch(err) {
+    console.error('loadManagerContacts error:', err.message);
+  }
+  renderContactsTable();
+}
+
+// Read-only summary of Root Change's own contract deliverables —
+// separate from the DRN program data everything else on this page
+// covers. Reads delivery_activities + delivery_deliverables directly
+// from Supabase, same pattern as loadRecipients() above. Overdue/
+// upcoming logic matches deliveryFlag() in star-dashboard.html exactly,
+// so a deliverable never shows a different status here than it does
+// in the actual Delivery Tracker tab.
+async function loadDeliveryStatus() {
+  const body = document.getElementById('delivery-status-body');
+  try {
+    const [actRes, dlRes] = await Promise.all([
+      fetch(SUPABASE_URL + '/rest/v1/delivery_activities?select=id,name', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      }),
+      fetch(SUPABASE_URL + '/rest/v1/delivery_deliverables?select=id,activity_id,title,due,status', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      }),
+    ]);
+    const activities   = await actRes.json();
+    const deliverables = await dlRes.json();
+    if (!Array.isArray(activities) || !Array.isArray(deliverables)) throw new Error('Unexpected response shape');
+
+    const actNames = {};
+    activities.forEach(a => { actNames[a.id] = a.name; });
+
+    const now = new Date();
+    const curKey  = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+    const nextD   = new Date(now.getFullYear(), now.getMonth()+1, 1);
+    const nextKey = nextD.getFullYear() + '-' + String(nextD.getMonth()+1).padStart(2,'0');
+
+    const overdue  = deliverables.filter(d => d.due && d.status !== 'done' && d.due < curKey);
+    const upcoming = deliverables.filter(d => d.due && d.status !== 'done' && (d.due === curKey || d.due === nextKey));
+
+    const total = deliverables.length;
+    const done  = deliverables.filter(d => d.status === 'done').length;
+    const pct   = total ? Math.round(done/total*100) : 0;
+
+    function row(d) {
+      return '<div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:5px 0;">' +
+        '<span>' + d.title.replace(/</g,'&lt;') + '</span>' +
+        '<span style="margin-left:auto;font-size:11.5px;color:#6B7280;">' + (actNames[d.activity_id] || '').replace(/</g,'&lt;') + ' · ' + d.due + '</span>' +
+        '</div>';
+    }
+
+    let html = '<div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:10px;">' +
+      '<div><span style="font-size:20px;font-weight:700;color:#1F2937;">' + pct + '%</span> <span style="font-size:12px;color:#6B7280;">overall (' + done + '/' + total + ')</span></div>' +
+      '<div><span style="font-size:20px;font-weight:700;color:' + (overdue.length ? '#DC2626' : '#059669') + ';">' + overdue.length + '</span> <span style="font-size:12px;color:#6B7280;">overdue</span></div>' +
+      '<div><span style="font-size:20px;font-weight:700;color:' + (upcoming.length ? '#B9791F' : '#059669') + ';">' + upcoming.length + '</span> <span style="font-size:12px;color:#6B7280;">due soon</span></div>' +
+      '</div>';
+
+    if (overdue.length || upcoming.length) {
+      html += '<div style="margin-top:8px;">';
+      overdue.forEach(d => { html += row(d); });
+      upcoming.forEach(d => { html += row(d); });
+      html += '</div>';
+    } else {
+      html += '<div style="font-size:13px;color:#6B7280;">Nothing overdue or due in the next month.</div>';
+    }
+
+    body.innerHTML = html;
+  } catch(err) {
+    console.error('loadDeliveryStatus error:', err.message);
+    body.innerHTML = '<div class="result-box result-error visible">Could not load delivery status: ' + err.message + '</div>';
+  }
+}
+
+// The five active CRT teams. crt_monthly_counts only breaks numbers
+// down by state, not by team — Florida alone has three — so this
+// queries crt_reports directly and does the same "larger of team vs.
+// individual totals" rule the view uses, just per team instead of
+// per state. Matches deliveryFlag()'s convention in star-dashboard.html:
+// a monthly-cadence team isn't "missing" until its month has actually
+// closed, only "not yet due" before that.
+const CRT_TEAMS = [
+  { state: 'Florida', area: 'Miami-Dade' },
+  { state: 'Florida', area: 'Suncoast' },
+  { state: 'Florida', area: 'Tallahassee' },
+  { state: 'North Carolina', area: 'Rowan' },
+  { state: 'Wisconsin', area: 'Wisconsin (statewide)' },
+];
+
+async function loadCRTStatus() {
+  const body = document.getElementById('crt-status-body');
+  try {
+    // CRT reports describe the month they're submitted for, and the form
+    // itself defaults to "last completed month" — so compliance is
+    // checked against last month, not the current (still-ongoing) one.
+    // No grace period beyond that: a report becomes checkable the moment
+    // the new month starts. Adjust here if a grace window is wanted.
+    const now = new Date();
+    const target = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const targetKey = target.getFullYear() + '-' + String(target.getMonth()+1).padStart(2,'0') + '-01';
+    const targetLabel = target.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    const res = await fetch(SUPABASE_URL + '/rest/v1/crt_reports?select=state,area,submitter,scope,intervention_count,source&month=eq.' + targetKey, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    });
+    if (!res.ok) throw new Error('DB ' + res.status + ': ' + await res.text());
+    const rows = await res.json();
+
+    function row(team) {
+      const forTeam = rows.filter(r => r.state === team.state && r.area === team.area);
+      const teamRows = forTeam.filter(r => r.scope === 'team');
+      const indivRows = forTeam.filter(r => r.scope === 'individual');
+      const unknownRows = forTeam.filter(r => r.scope !== 'team' && r.scope !== 'individual');
+      const sum = list => list.reduce((s,r) => s + (r.intervention_count || 0), 0);
+      // Same rule as the crt_monthly_counts view: the largest of the team,
+      // individual, and unlabeled (historical) totals, never their sum.
+      const teamTotal = sum(teamRows), indivTotal = sum(indivRows), unknownTotal = sum(unknownRows);
+      const hasCount = forTeam.some(r => r.intervention_count !== null && r.intervention_count !== undefined);
+      const count = hasCount ? Math.max(teamTotal, indivTotal, unknownTotal) : null;
+      const estimated = forTeam.some(r => r.source === 'alchemer_import' && r.intervention_count !== null && r.intervention_count !== undefined);
+      const overlap = teamRows.length > 0 && indivRows.length > 0;
+
+      const statusLabel = forTeam.length ? 'Reported' : 'Missing';
+      const statusColor = forTeam.length ? '#059669' : '#DC2626';
+
+      const submitters = forTeam.map(r => r.submitter).join(', ');
+      return '<tr>' +
+        '<td style="padding:6px 4px;font-size:13px;color:#374151;border-bottom:1px solid #F3F4F6;">' + team.area + ', ' + team.state + '</td>' +
+        '<td style="padding:6px 4px;border-bottom:1px solid #F3F4F6;white-space:nowrap;"><span style="color:' + statusColor + ';font-size:11.5px;">&#9679; ' + statusLabel + '</span></td>' +
+        '<td style="padding:6px 4px;font-size:13px;border-bottom:1px solid #F3F4F6;">' + (count === null ? '—' : count) +
+          (estimated ? ' <span style="font-size:11px;color:#9CA3AF;">(estimated)</span>' : '') + '</td>' +
+        '<td style="padding:6px 4px;font-size:12px;color:#6B7280;border-bottom:1px solid #F3F4F6;">' + (submitters || '—') +
+          (overlap ? ' <span style="color:#B9791F;font-weight:600;">· team + individual reports both present — confirm count</span>' : '') +
+          (unknownRows.length ? ' <span style="color:#B9791F;">· ' + unknownRows.length + ' unscoped historical report(s)</span>' : '') +
+        '</td>' +
+      '</tr>';
+    }
+
+    body.innerHTML =
+      '<div style="font-size:12px;color:#6B7280;margin-bottom:8px;">Showing status for <strong>' + targetLabel + '</strong> — the most recent month reports would exist for.</div>' +
+      '<table style="width:100%;border-collapse:collapse;">' +
+        '<thead><tr>' +
+          '<th style="text-align:left;font-size:11px;color:#9CA3AF;text-transform:uppercase;padding:4px;">Team</th>' +
+          '<th style="text-align:left;font-size:11px;color:#9CA3AF;text-transform:uppercase;padding:4px;">Status</th>' +
+          '<th style="text-align:left;font-size:11px;color:#9CA3AF;text-transform:uppercase;padding:4px;">Interventions</th>' +
+          '<th style="text-align:left;font-size:11px;color:#9CA3AF;text-transform:uppercase;padding:4px;">Submitted By</th>' +
+        '</tr></thead><tbody>' +
+        CRT_TEAMS.map(row).join('') +
+        '</tbody></table>';
+  } catch(err) {
+    console.error('loadCRTStatus error:', err.message);
+    body.innerHTML = '<div class="result-box result-error visible">Could not load CRT status: ' + err.message + '</div>';
+  }
+}
+
+// One table: every lead, their status this period (from Pipeline
+// Status data), their email (editable inline), and their manager.
+// Re-rendered whenever either status or contact data refreshes, so
+// the two always stay in sync without needing two separate sections.
+// Tracks which missing leads are checked for the next reminder send —
+// key is "state||leadName", value true/false. Defaults to checked
+// (true) the first time a missing lead is seen; preserved across
+// re-renders so toggling a checkbox survives a table refresh.
+let reminderSelection = {};
+
+function renderContactsTable() {
+  const wrap = document.getElementById('contacts-table-wrap');
+  if (!wrap) return;
+
+  let rows = '';
+  let anyMissing = false;
+  Object.keys(leadRoster).forEach(function(state) {
+    const statusByLead = {};
+    let mostRecent = null;
+    if (lastStatusData && lastStatusData.states && lastStatusData.states[state] && lastStatusData.states[state].leads) {
+      lastStatusData.states[state].leads.forEach(function(l) {
+        statusByLead[l.name] = l.status || (l.reportedThisPeriod ? 'reported' : 'missing');
+        if (l.lastSubmission && (!mostRecent || l.lastSubmission > mostRecent)) mostRecent = l.lastSubmission;
+      });
+    }
+    const mostRecentLabel = mostRecent
+      ? ' — most recently reported for ' + new Date(mostRecent).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+      : '';
+
+    rows += '<tr><td colspan="5" style="padding:10px 4px 4px;font-size:12px;font-weight:700;color:#374151;border-bottom:1px solid #E5E7EB;">' +
+      state + '<span style="font-weight:400;color:#9CA3AF;">' + mostRecentLabel + '</span></td></tr>';
+
+    const manager = lastManagerContacts[state] || TCC_MANAGERS_ADMIN[state];
+    const mgrInputId = 'manager-email-' + state.replace(/\s+/g,'');
+
+    leadRoster[state].forEach(function(leadName) {
+      const key = state + '||' + leadName;
+      const currentEmail = lastLeadContacts[key] || '';
+      const inputId = 'contact-email-' + state.replace(/\s+/g,'') + '-' + leadName.replace(/[^a-zA-Z]/g,'');
+      const status = statusByLead[leadName]; // 'reported' | 'missing' | 'not_yet_due' | undefined
+      const isMissing = status === 'missing';
+
+      let checkboxHtml = '';
+      if (isMissing) {
+        anyMissing = true;
+        if (!(key in reminderSelection)) reminderSelection[key] = true; // default checked
+        checkboxHtml = '<input type="checkbox" ' + (reminderSelection[key] ? 'checked' : '') +
+          ' onchange="reminderSelection[\'' + key.replace(/'/g,"\\'") + '\'] = this.checked" style="width:15px;height:15px;cursor:pointer;">';
+      }
+
+      const statusHtml =
+        status === 'reported'    ? '<span style="color:#059669;font-size:11.5px;">&#9679; Reported</span>' :
+        status === 'missing'     ? '<span style="color:#DC2626;font-size:11.5px;">&#9679; Missing</span>' :
+        status === 'not_yet_due' ? '<span style="color:#9CA3AF;font-size:11.5px;">&#9679; Not yet due</span>' :
+        '<span style="color:#9CA3AF;font-size:11.5px;">—</span>';
+
+      rows += '<tr>' +
+        '<td style="padding:6px 4px;border-bottom:1px solid #F3F4F6;text-align:center;">' + checkboxHtml + '</td>' +
+        '<td style="padding:6px 4px;font-size:13px;color:#374151;border-bottom:1px solid #F3F4F6;">' + leadName + '</td>' +
+        '<td style="padding:6px 4px;border-bottom:1px solid #F3F4F6;white-space:nowrap;">' + statusHtml + '</td>' +
+        '<td style="padding:6px 4px;border-bottom:1px solid #F3F4F6;">' +
+          '<input type="text" id="' + inputId + '" value="' + currentEmail + '" placeholder="email@example.org" style="width:190px;padding:4px 8px;border:1.5px solid ' + (currentEmail ? '#E5E7EB' : '#FCA5A5') + ';border-radius:6px;font-size:12px;"> ' +
+          '<button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;" onclick="saveContactEmail(\'' + state.replace(/'/g,"\\'") + '\', \'' + leadName.replace(/'/g,"\\'") + '\', \'' + inputId + '\')">Save</button> ' +
+          '<span id="' + inputId + '-status" style="font-size:11px;"></span>' +
+        '</td>' +
+        '<td style="padding:6px 4px;border-bottom:1px solid #F3F4F6;">' +
+          '<input type="text" id="' + mgrInputId + '" value="' + (manager ? manager.email : '') + '" placeholder="email@example.org" style="width:180px;padding:4px 8px;border:1.5px solid #E5E7EB;border-radius:6px;font-size:11.5px;color:#6B7280;"> ' +
+          '<button class="btn btn-secondary" style="padding:3px 8px;font-size:11px;" onclick="saveManagerContact(\'' + state.replace(/'/g,"\\'") + '\', \'' + mgrInputId + '\')">Save</button> ' +
+          '<span id="' + mgrInputId + '-status" style="font-size:11px;"></span>' +
+        '</td>' +
+      '</tr>';
+    });
+  });
+
+  const selectAllHtml = anyMissing
+    ? '<div style="margin-bottom:8px;">' +
+        '<button class="btn btn-secondary" style="padding:4px 10px;font-size:11.5px;" onclick="setAllReminderSelection(true)">Select all</button> ' +
+        '<button class="btn btn-secondary" style="padding:4px 10px;font-size:11.5px;" onclick="setAllReminderSelection(false)">Deselect all</button>' +
+      '</div>'
+    : '';
+
+  wrap.innerHTML = selectAllHtml +
+    '<table style="width:100%;border-collapse:collapse;">' +
+      '<thead><tr>' +
+        '<th style="width:32px;"></th>' +
+        '<th style="text-align:left;font-size:11px;color:#9CA3AF;text-transform:uppercase;padding:4px;">Lead</th>' +
+        '<th style="text-align:left;font-size:11px;color:#9CA3AF;text-transform:uppercase;padding:4px;">This Period</th>' +
+        '<th style="text-align:left;font-size:11px;color:#9CA3AF;text-transform:uppercase;padding:4px;">Email</th>' +
+        '<th style="text-align:left;font-size:11px;color:#9CA3AF;text-transform:uppercase;padding:4px;">Manager</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>';
+}
+
+async function saveManagerContact(state, inputId) {
+  const input  = document.getElementById(inputId);
+  const status = document.getElementById(inputId + '-status');
+  const email  = input.value.trim();
+  status.textContent = 'Saving…';
+  status.style.color = '#6B7280';
+
+  const url = APPS_SCRIPT_URL + '?action=updateManagerContact' +
+    '&state=' + encodeURIComponent(state) +
+    '&email=' + encodeURIComponent(email);
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data.status === 'ok') {
+      if (!lastManagerContacts[state]) lastManagerContacts[state] = {};
+      lastManagerContacts[state].email = email;
+      status.textContent = 'Saved';
+      status.style.color = '#059669';
+      setTimeout(function(){ status.textContent = ''; }, 2000);
+    } else {
+      status.textContent = data.message || 'Failed';
+      status.style.color = '#DC2626';
+    }
+  } catch(err) {
+    status.textContent = 'Request failed';
+    status.style.color = '#DC2626';
+  }
+}
+
+function setAllReminderSelection(value) {
+  Object.keys(reminderSelection).forEach(function(key) { reminderSelection[key] = value; });
+  renderContactsTable();
+}
+
+async function saveContactEmail(state, leadName, inputId) {
+  const input  = document.getElementById(inputId);
+  const status = document.getElementById(inputId + '-status');
+  const email  = input.value.trim();
+  status.textContent = 'Saving…';
+  status.style.color = '#6B7280';
+
+  const url = APPS_SCRIPT_URL + '?action=updateLeadContact' +
+    '&state=' + encodeURIComponent(state) +
+    '&leadName=' + encodeURIComponent(leadName) +
+    '&email=' + encodeURIComponent(email);
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data.status === 'ok') {
+      lastLeadContacts[state + '||' + leadName] = email;
+      status.textContent = 'Saved';
+      status.style.color = '#059669';
+      input.style.borderColor = '#E5E7EB';
+      setTimeout(function(){ status.textContent = ''; }, 2000);
+    } else {
+      status.textContent = data.message || 'Failed';
+      status.style.color = '#DC2626';
+    }
+  } catch(err) {
+    status.textContent = 'Request failed';
+    status.style.color = '#DC2626';
+  }
+}
+
+// LATE REPORT REMINDERS ------------------------------------------
+// Two-step: first click just counts who's missing (the table above
+// already shows exactly who, and their email status) and asks for
+// confirmation; second click actually sends. Never sends on one
+// click — real emails go to external stakeholders here, not just
+// internal staff.
+function sendReminders() {
+  const result = document.getElementById('remind-result');
+
+  if (!lastStatusData || !lastStatusData.states) {
+    result.innerHTML = '<span style="font-size:12px;color:#DC2626;">Status data not loaded yet — click "Refresh status" first.</span>';
+    return;
+  }
+
+  const selectedKeys = Object.keys(reminderSelection).filter(function(k) { return reminderSelection[k]; });
+  let missingCount = 0;
+  Object.keys(lastStatusData.states).forEach(function(state) {
+    const leads = lastStatusData.states[state].leads;
+    if (!leads) return;
+    leads.filter(function(l) { return !l.reportedThisPeriod; }).forEach(function() { missingCount++; });
+  });
+
+  if (!missingCount) {
+    result.innerHTML = '<span style="font-size:12px;color:#059669;">Everyone\'s reported — no reminders needed.</span>';
+    return;
+  }
+  if (!selectedKeys.length) {
+    result.innerHTML = '<span style="font-size:12px;color:#D97706;">Nothing is checked — check at least one missing lead above, or click "Select all."</span>';
+    return;
+  }
+
+  const missingNoEmail = selectedKeys.filter(function(k) { return !lastLeadContacts[k]; }).length;
+  const warnText = missingNoEmail
+    ? '<div style="font-size:11.5px;color:#D97706;margin-bottom:6px;">' + missingNoEmail + ' of the checked lead(s) don\'t have an email on file yet — their manager will still be notified, but consider filling those in first.</div>'
+    : '';
+
+  result.innerHTML =
+    '<div style="font-size:12.5px;color:#374151;margin-bottom:6px;">' +
+      '<strong>This will email ' + selectedKeys.length + ' checked lead(s) and their managers</strong> — see the checkboxes above for exactly who.' +
+    '</div>' + warnText +
+    '<button class="btn btn-primary" style="padding:6px 14px;font-size:12.5px;" onclick="confirmSendReminders()">Confirm and send</button> ' +
+    '<button class="btn btn-secondary" style="padding:6px 14px;font-size:12.5px;" onclick="document.getElementById(\'remind-result\').innerHTML=\'\'">Cancel</button>';
+}
+
+async function confirmSendReminders() {
+  const btn    = document.getElementById('remind-btn');
+  const result = document.getElementById('remind-result');
+  btn.disabled = true;
+  result.innerHTML = '<span style="font-size:12px;color:#6B7280;">Sending…</span>';
+
+  const selectedKeys = Object.keys(reminderSelection).filter(function(k) { return reminderSelection[k]; });
+
+  try {
+    const res  = await fetch(APPS_SCRIPT_URL + '?action=sendReminders&selected=' + encodeURIComponent(JSON.stringify(selectedKeys)));
+    const data = await res.json();
+
+    if (data.status !== 'ok') {
+      result.innerHTML = '<span style="font-size:12px;color:#DC2626;">Failed: ' + (data.message || 'Unknown error') + '</span>';
+    } else if (!data.sent.length && !data.skipped.length) {
+      result.innerHTML = '<span style="font-size:12px;color:#059669;">Everyone\'s reported — no reminders needed.</span>';
+    } else {
+      let html = '';
+      if (data.sent.length) {
+        html += '<div style="font-size:12px;color:#059669;margin-bottom:4px;"><strong>Sent ' + data.sent.length + ':</strong> ' +
+          data.sent.map(function(s) { return s.state + ' — ' + s.lead; }).join(', ') + '</div>';
+      }
+      if (data.skipped.length) {
+        html += '<div style="font-size:12px;color:#D97706;"><strong>Skipped ' + data.skipped.length + ':</strong> ' +
+          data.skipped.map(function(s) { return s.state + ' — ' + s.lead + ' (' + s.reason + ')'; }).join('; ') + '</div>';
+      }
+      result.innerHTML = html;
+    }
+  } catch(err) {
+    result.innerHTML = '<span style="font-size:12px;color:#DC2626;">Request failed: ' + err.message + '</span>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Send reminders to missing leads';
+}
+
+// FORCE SYNC                                                 
+async function forceSync() {
+  const btn     = document.getElementById('sync-btn');
+  const spinner = document.getElementById('sync-spinner');
+  const result  = document.getElementById('sync-result');
+  const log     = document.getElementById('sync-log');
+
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+  result.className = 'result-box result-info visible';
+  result.textContent = 'Syncing all states to Supabase   this may take 30 60 seconds ';
+  log.className = 'log-area visible';
+  log.innerHTML = '<div class="log-line log-info">Starting force sync </div>';
+
+  const month = document.getElementById('sync-month').value;
+  const year  = document.getElementById('sync-year').value;
+  const url   = APPS_SCRIPT_URL + '?action=forceSync' + (month ? '&month=' + encodeURIComponent(month) : '') + '&year=' + year;
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      result.className = 'result-box result-ok visible';
+      var stateCount   = data.synced.filter(function(s){ return s !== 'Faith Forward Democracy (FFD)'; }).length;
+      var programCount = data.synced.filter(function(s){ return s === 'Faith Forward Democracy (FFD)'; }).length;
+      var syncSummary  = stateCount + ' state' + (stateCount !== 1 ? 's' : '') + (programCount > 0 ? ' and 1 program' : '');
+      result.textContent = '  Sync complete for ' + data.month + ' - ' + syncSummary + ' updated.';
+      data.synced.forEach(function(s) {
+        log.innerHTML += '<div class="log-line log-ok">  ' + s + '</div>';
+      });
+    } else {
+      result.className = 'result-box result-error visible';
+      result.textContent = 'Partial sync   ' + data.errors.length + ' state(s) failed. Check log.';
+      data.errors.forEach(function(e) {
+        log.innerHTML += '<div class="log-line log-error">  ' + e + '</div>';
+      });
+    }
+  } catch(err) {
+    result.className = 'result-box result-error visible';
+    result.textContent = 'Sync failed: ' + err.message;
+  }
+
+  btn.disabled = false;
+  spinner.style.display = 'none';
+  loadStatus();
+}
+
+// GENERATE MONTHLY REPORT                                    
+const GEN_TF_DIVS = ['gen-tf-monthly','gen-tf-quarterly','gen-tf-sixmonth','gen-tf-annual','gen-tf-custom'];
+const GEN_MONTH_NAMES = ['January','February','March','April','May','June',
+  'July','August','September','October','November','December'];
+
+function genRecipientType() {
+  return document.getElementById('gen-type').value === 'newsletter' ? 'news' : 'report';
+}
+
+// Toggles which timeframe picker and which recipient chip-list is
+// visible based on the selected report type. Quarterly/6-Month/Annual
+// share the range-based backend added in an earlier pass; Monthly and
+// Newsletter share the simple month+year picker (Newsletter has no
+// range support of its own — it stays single-month, matching its
+// existing backend).
+function onGenTypeChange() {
+  const type = document.getElementById('gen-type').value;
+
+  GEN_TF_DIVS.forEach(function(id) { document.getElementById(id).style.display = 'none'; });
+  const tfMap = { monthly: 'gen-tf-monthly', crplevel: 'gen-tf-monthly', crtreport: 'gen-tf-monthly', newsletter: 'gen-tf-monthly',
+    quarterly: 'gen-tf-quarterly', sixmonth: 'gen-tf-sixmonth', annual: 'gen-tf-annual', custom: 'gen-tf-custom',
+    qaworkbook: 'gen-tf-custom' };
+  document.getElementById(tfMap[type]).style.display = 'flex';
+
+  // CRP-Level and CRT Report are always every state/team — there's
+  // nothing meaningful to select, so the checkboxes just add confusion.
+  document.getElementById('gen-states-block').style.display = (type === 'crplevel' || type === 'crtreport') ? 'none' : 'block';
+
+  // QA Workbook uses the From/To picker, defaulting to the analyst
+  // spreadsheet's full span: November 2023 through the last completed month.
+  document.getElementById('gen-qa-block').style.display = type === 'qaworkbook' ? 'block' : 'none';
+  if (type === 'qaworkbook') {
+    const last = new Date(); last.setDate(0);
+    document.getElementById('gen-from-month').value = 'November';
+    document.getElementById('gen-from-year').value  = '2023';
+    document.getElementById('gen-to-month').value   = GEN_MONTH_NAMES[last.getMonth()];
+    document.getElementById('gen-to-year').value    = String(last.getFullYear());
+  }
+
+  const isNews = type === 'newsletter';
+  document.getElementById('report-recipients').style.display    = isNews ? 'none' : 'flex';
+  document.getElementById('news-recipients').style.display      = isNews ? 'flex' : 'none';
+  document.getElementById('gen-report-new-email').style.display = isNews ? 'none' : 'inline-block';
+  document.getElementById('gen-report-add-btn').style.display   = isNews ? 'none' : 'inline-block';
+  document.getElementById('news-new-email').style.display       = isNews ? 'inline-block' : 'none';
+  document.getElementById('gen-news-add-btn').style.display     = isNews ? 'inline-block' : 'none';
+
+  updateGenPreview();
+}
+
+// Reduces every report type down to the same {month, year, fromMonth,
+// fromYear} shape the backend already understands (see the
+// range-capable generateMonthlyNarrative). Monthly/Newsletter leave
+// fromMonth blank (a single month, or "most recent" if month is also
+// blank); everything else computes a real range.
+function computeGenRange() {
+  const type = document.getElementById('gen-type').value;
+
+  if (type === 'monthly' || type === 'crplevel' || type === 'crtreport' || type === 'newsletter') {
+    return {
+      month: document.getElementById('gen-month').value,
+      year:  document.getElementById('gen-year').value,
+      fromMonth: '', fromYear: '',
+    };
+  }
+  if (type === 'quarterly') {
+    const q = parseInt(document.getElementById('gen-quarter').value, 10);
+    const y = document.getElementById('gen-quarter-year').value;
+    return { month: GEN_MONTH_NAMES[(q - 1) * 3 + 2], year: y, fromMonth: GEN_MONTH_NAMES[(q - 1) * 3], fromYear: y };
+  }
+  if (type === 'sixmonth') {
+    const h = parseInt(document.getElementById('gen-half').value, 10);
+    const y = document.getElementById('gen-half-year').value;
+    return h === 1
+      ? { month: 'June', year: y, fromMonth: 'January', fromYear: y }
+      : { month: 'December', year: y, fromMonth: 'July', fromYear: y };
+  }
+  if (type === 'annual') {
+    const y = document.getElementById('gen-annual-year').value;
+    return { month: 'December', year: y, fromMonth: 'January', fromYear: y };
+  }
+  // custom
+  return {
+    month:     document.getElementById('gen-to-month').value,
+    year:      document.getElementById('gen-to-year').value,
+    fromMonth: document.getElementById('gen-from-month').value,
+    fromYear:  document.getElementById('gen-from-year').value,
+  };
+}
+
+function genIsRealRange(range) {
+  return !!range.fromMonth && !(range.fromMonth === range.month && range.fromYear === range.year);
+}
+
+function updateGenPreview() {
+  const type  = document.getElementById('gen-type').value;
+  const range = computeGenRange();
+  let label;
+  if ((type === 'monthly' || type === 'crplevel' || type === 'crtreport' || type === 'newsletter') && !range.month) {
+    label = 'the most recently completed month';
+  } else if (!genIsRealRange(range)) {
+    label = range.month + ' ' + range.year;
+  } else {
+    label = range.fromMonth + ' ' + range.fromYear + '  –  ' + range.month + ' ' + range.year;
+  }
+  document.getElementById('gen-range-preview').textContent = 'This will cover: ' + label;
+}
+
+function toggleGenRecipientMode() {
+  const oneOff = document.getElementById('gen-oneoff-toggle').checked;
+  document.getElementById('gen-standing-block').style.display = oneOff ? 'none' : 'block';
+  document.getElementById('gen-oneoff-block').style.display   = oneOff ? 'block' : 'none';
+}
+
+async function generateUnifiedReport() {
+  const btn         = document.getElementById('gen-btn');
+  const spinner     = document.getElementById('gen-spinner');
+  const result      = document.getElementById('gen-result');
+  const newsPreview = document.getElementById('gen-news-preview-wrap');
+  const type        = document.getElementById('gen-type').value;
+  const isNews      = type === 'newsletter';
+  const isCRPLevel  = type === 'crplevel';
+  const isCRTReport = type === 'crtreport';
+  const isQA        = type === 'qaworkbook';
+  const noStates    = isCRPLevel || isCRTReport;
+  const states      = noStates ? [] : getCheckedStates('gen-state-checks');
+
+  if (!noStates && !states.length) {
+    result.className = 'result-box result-error visible';
+    result.textContent = 'Please select at least one state.';
+    return;
+  }
+
+  const oneOff = document.getElementById('gen-oneoff-toggle').checked;
+  let recipientList, oneOffEmail;
+  if (oneOff) {
+    oneOffEmail = document.getElementById('gen-oneoff-email').value.trim().toLowerCase();
+    if (!oneOffEmail || !oneOffEmail.includes('@')) {
+      result.className = 'result-box result-error visible';
+      result.textContent = 'Please enter a valid email address.';
+      return;
+    }
+    recipientList = [oneOffEmail];
+  } else {
+    recipientList = getRecipients(genRecipientType());
+  }
+
+  const range   = computeGenRange();
+  const isRange = genIsRealRange(range);
+
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+  newsPreview.style.display = 'none';
+  result.className = 'result-box result-info visible';
+  result.textContent = isQA
+    ? 'Building QA Workbook — reading Supabase and weekly reports, then laying out the spreadsheet. This can take 1–3 minutes for the full history…'
+    : isNews
+    ? 'Generating newsletter — writing your DRN member update. About 30 seconds…'
+    : isCRPLevel
+      ? 'Generating CRP-level report and publishing to the dashboard — about 60 seconds…'
+      : isCRTReport
+        ? 'Generating CRT report — reading conflict-mitigation reports and writing the narrative. About 60 seconds…'
+        : (isRange ? 'Generating report — this may take up to 2 minutes for longer date ranges…'
+                   : 'Generating report — reading coordinator submissions and writing the narrative. This takes about 60 seconds…');
+
+  const action = isQA ? 'generateQAWorkbook' : isNews ? 'generateNewsletter' : isCRPLevel ? 'generateCRPLevelMonthly' : isCRTReport ? 'generateCRTReport' : 'generateReport';
+  let url = APPS_SCRIPT_URL + '?action=' + action +
+    (range.month ? '&month=' + encodeURIComponent(range.month) : '') +
+    '&year=' + range.year +
+    '&recipients=' + encodeURIComponent(recipientList.join(','));
+  if (!noStates) url += '&states=' + encodeURIComponent(states.join(','));
+  if (!isNews && !noStates && range.fromMonth) {
+    url += '&fromMonth=' + encodeURIComponent(range.fromMonth) + '&fromYear=' + range.fromYear;
+  }
+  if (isQA) {
+    const compareUrl = document.getElementById('gen-qa-compare-url').value.trim();
+    if (compareUrl) url += '&compareUrl=' + encodeURIComponent(compareUrl);
+  }
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      result.className = 'result-box result-ok visible';
+      const rcptText = oneOff
+        ? 'Emailed to ' + oneOffEmail + '.'
+        : (recipientList.length ? 'Also emailed to ' + recipientList.join(', ') + '.' : 'No recipients were listed, so no notification email was sent.');
+
+      if (isQA) {
+        const flagText = data.flagCount
+          ? data.flagCount + ' cell(s) flagged for review (' + data.pipelineFlags + ' where weekly reports don\'t add up' +
+            (data.compareNote && data.compareNote.indexOf('Compared') === 0 ? ', ' + data.analystFlags + ' that differ from the analyst sheet' : '') + ').'
+          : 'Nothing flagged.';
+        result.innerHTML = 'QA Workbook ready for <strong>' + data.month + '</strong>: ' + data.statesIncluded + ' state block(s). ' + flagText +
+          (data.compareNote ? '<br><span style="font-size:12px;">' + data.compareNote + '</span>' : '') + '<br><br>' +
+          '<a href="' + data.sheetUrl + '" target="_blank">Open QA Workbook</a>' +
+          '<br><span style="font-size:12px;margin-top:4px;display:block">' + rcptText + ' Start with its "How to read this" tab.</span>';
+      } else if (isNews) {
+        result.textContent = 'Newsletter generated for ' + data.month + '. Preview below — copy and paste into your email tool.';
+        document.getElementById('news-subject').textContent = data.subject;
+        document.getElementById('news-preview').textContent = data.newsletter;
+        newsPreview.style.display = 'block';
+      } else if (isCRPLevel) {
+        result.innerHTML = 'Published to the dashboard for <strong>' + data.month + '</strong>.' +
+          (data.headline ? '<br>Headline: "' + data.headline + '"' : '') + '<br><br>' +
+          '<a href="' + data.docUrl + '" target="_blank">Open Google Doc</a>' +
+          '<br><span style="font-size:12px;margin-top:4px;display:block">' + rcptText + ' Nothing here has been reviewed by a human yet — check the dashboard entry before wider circulation.</span>';
+      } else if (isCRTReport) {
+        result.innerHTML = 'CRT report generated for <strong>' + data.month + '</strong>, covering ' + data.reportsIncluded + ' report(s).<br><br>' +
+          '<a href="' + data.docUrl + '" target="_blank">Open Google Doc</a>' +
+          '<br><span style="font-size:12px;margin-top:4px;display:block">' + rcptText + ' This describes real conflict-mitigation situations — Claude was told not to name private individuals, but review before this goes further.</span>';
+      } else {
+        result.innerHTML = 'Report generated for <strong>' + data.month + '</strong>. ' +
+          (data.submissions != null ? data.submissions + ' submissions included.<br><br>' : '<br><br>') +
+          '<a href="' + data.docUrl + '" target="_blank">Open Google Doc</a>' +
+          '<br><span style="font-size:12px;margin-top:4px;display:block">' + rcptText + '</span>';
+      }
+    } else {
+      result.className = 'result-box result-error visible';
+      result.textContent = 'Failed: ' + (data.message || 'Unknown error');
+    }
+  } catch(err) {
+    result.className = 'result-box result-error visible';
+    result.textContent = 'Request failed: ' + err.message;
+  }
+
+  btn.disabled = false;
+  spinner.style.display = 'none';
+}
+
+// -- UPDATE SOCIAL FOLLOWING / MEDIA REACH (manual entry) -----
+const MONTH_TO_NUM = {'January':1,'February':2,'March':3,'April':4,'May':5,'June':6,
+  'July':7,'August':8,'September':9,'October':10,'November':11,'December':12};
+const METRIC_LABELS = { social_following: 'social following', media_reach: 'media reach' };
+
+async function updateSocialFollowing() {
+  const btn      = document.getElementById('social-btn');
+  const spinner  = document.getElementById('social-spinner');
+  const result   = document.getElementById('social-result');
+  const metric   = document.getElementById('social-metric').value;
+  const state    = document.getElementById('social-state').value;
+  const month    = document.getElementById('social-month').value;
+  const year     = document.getElementById('social-year').value;
+  const rawValue = document.getElementById('social-value').value;
+
+  if (rawValue === '' || isNaN(rawValue) || Number(rawValue) < 0) {
+    result.className = 'result-box result-error visible';
+    result.textContent = 'Please enter a valid, non-negative number.';
+    return;
+  }
+
+  const monthStr = year + '-' + String(MONTH_TO_NUM[month]).padStart(2,'0') + '-01';
+
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+  result.className = 'result-box result-info visible';
+  result.textContent = 'Updating…';
+
+  try {
+    const url = APPS_SCRIPT_URL + '?action=updateMetricValue' +
+      '&state=' + encodeURIComponent(state) +
+      '&month=' + encodeURIComponent(monthStr) +
+      '&metric=' + encodeURIComponent(metric) +
+      '&value=' + encodeURIComponent(rawValue);
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      result.className = 'result-box result-success visible';
+      result.textContent = 'Updated ' + state + ' — ' + month + ' ' + year + ' ' + METRIC_LABELS[metric] + ' to ' + Number(rawValue).toLocaleString() + '.';
+      document.getElementById('social-value').value = '';
+    } else {
+      result.className = 'result-box result-error visible';
+      result.textContent = data.message || 'Update failed.';
+    }
+  } catch(err) {
+    result.className = 'result-box result-error visible';
+    result.textContent = 'Request failed: ' + err.message;
+  }
+
+  btn.disabled = false;
+  spinner.style.display = 'none';
+}
+function copyNewsletter() {
+  const text = document.getElementById('news-subject').textContent + '\n\n' +
+               document.getElementById('news-preview').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    const confirm = document.getElementById('copy-confirm');
+    confirm.style.display = 'block';
+    setTimeout(function() { confirm.style.display = 'none'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>
